@@ -2,10 +2,10 @@
 
 (provide sha256 sha256-bytes)
 
-(require 
+(require
  racket/pretty
  racket/fixnum
- (only-in "../../r6rslib/bytevectors.rkt"
+ (only-in grip/r6rslib/bytevectors
 	  bytevector?
 	  string->utf8
 	  make-bytevector
@@ -17,11 +17,11 @@
 	  bytevector-length
 	  bytevector-u8-ref
 	  bytevector-u8-set!)
- (only-in "../../r6rslib/arithmetic/bitwise.rkt"
-          bitwise-arithmetic-shift-right
-          bitwise-arithmetic-shift-left)
+ (only-in grip/r6rslib/arithmetic/bitwise
+	  bitwise-arithmetic-shift-right
+	  bitwise-arithmetic-shift-left)
  (only-in "../private/util.rkt"
-          fxdiv-and-mod fx1+ fx1- fxzero? str->bv))
+	  fxdiv-and-mod fx1+ fx1- fxzero? str->bv))
 
 ;; (require (filtered-in
 ;;           (λ (name) (regexp-replace #rx"unsafe-" name ""))
@@ -48,7 +48,7 @@
 (define (m32+ x y)
   (m32 (+ x y)))
 
-;; set the ith u32 location to the  u32 value 
+;; set the ith u32 location to the  u32 value
 (: word-set! (Bytes Integer Integer -> Void))
 (define (word-set! bv32 idx val)
   (bytevector-u32-set! bv32 (fx* 4 idx) val 'big))
@@ -58,7 +58,7 @@
 (define (word-ref bv32 idx)
   (bytevector-u32-ref bv32 (fx* 4 idx) 'big))
 
-;; SHA-256 right rotate 
+;; SHA-256 right rotate
 (: rotate (Integer Integer -> Integer))
 (define (rotate v n)
   (m32 (bitwise-ior (bitwise-arithmetic-shift-right v n)
@@ -79,15 +79,15 @@
 (define k
   (do ((constants (make-bytevector (fx* 64 4) 0))
        (idx 0 (fx1+ idx))
-       (round-values 
+       (round-values
 	(list #x428a2f98 #x71374491 #xb5c0fbcf #xe9b5dba5 #x3956c25b #x59f111f1 #x923f82a4 #xab1c5ed5
-	      #xd807aa98 #x12835b01 #x243185be #x550c7dc3 #x72be5d74 #x80deb1fe #x9bdc06a7 #xc19bf174 
-	      #xe49b69c1 #xefbe4786 #x0fc19dc6 #x240ca1cc #x2de92c6f #x4a7484aa #x5cb0a9dc #x76f988da 
-	      #x983e5152 #xa831c66d #xb00327c8 #xbf597fc7 #xc6e00bf3 #xd5a79147 #x06ca6351 #x14292967 
-	      #x27b70a85 #x2e1b2138 #x4d2c6dfc #x53380d13 #x650a7354 #x766a0abb #x81c2c92e #x92722c85 
-	      #xa2bfe8a1 #xa81a664b #xc24b8b70 #xc76c51a3 #xd192e819 #xd6990624 #xf40e3585 #x106aa070 
-	      #x19a4c116 #x1e376c08 #x2748774c #x34b0bcb5 #x391c0cb3 #x4ed8aa4a #x5b9cca4f #x682e6ff3 
-	      #x748f82ee #x78a5636f #x84c87814 #x8cc70208 #x90befffa #xa4506ceb #xbef9a3f7 #xc67178f2) 
+	      #xd807aa98 #x12835b01 #x243185be #x550c7dc3 #x72be5d74 #x80deb1fe #x9bdc06a7 #xc19bf174
+	      #xe49b69c1 #xefbe4786 #x0fc19dc6 #x240ca1cc #x2de92c6f #x4a7484aa #x5cb0a9dc #x76f988da
+	      #x983e5152 #xa831c66d #xb00327c8 #xbf597fc7 #xc6e00bf3 #xd5a79147 #x06ca6351 #x14292967
+	      #x27b70a85 #x2e1b2138 #x4d2c6dfc #x53380d13 #x650a7354 #x766a0abb #x81c2c92e #x92722c85
+	      #xa2bfe8a1 #xa81a664b #xc24b8b70 #xc76c51a3 #xd192e819 #xd6990624 #xf40e3585 #x106aa070
+	      #x19a4c116 #x1e376c08 #x2748774c #x34b0bcb5 #x391c0cb3 #x4ed8aa4a #x5b9cca4f #x682e6ff3
+	      #x748f82ee #x78a5636f #x84c87814 #x8cc70208 #x90befffa #xa4506ceb #xbef9a3f7 #xc67178f2)
 	(cdr round-values)))
       ((fx= idx 64) constants)
     (word-set! constants idx (car round-values))))
@@ -122,10 +122,10 @@
   (let ((len (bytevector-length bv))  ;; size of data to hash
 	(w64 (make-bytevector 256 0)) ;; working buffer 64 32-bit words (256 bytes)
 	(h0 H0)(h1 H1)(h2 H2)(h3 H3)(h4 H4)(h5 H5)(h6 H6)(h7 H7)) ;; init the hash
-    
+
     ;; process all the 64 bytes (512 bit) chunks available
     (let-values (((chunks remainder)(fxdiv-and-mod len 64))) ;; # of 64 byte chunks and remainder
-      (let ((hash-and-update 	       ;; Hash the chunk and update running hash values
+      (let ((hash-and-update	       ;; Hash the chunk and update running hash values
 	     (lambda ()
 	       (let ((a h0)(b h1)(c h2)(d h3)(e h4)(f h5)(g h6)(h h7))
 		 (do ((i 0 (fx1+ i)))
@@ -142,16 +142,16 @@
 		 (set! h0 (m32+ h0 a))(set! h1 (m32+ h1 b))(set! h2 (m32+ h2 c))
 		 (set! h3 (m32+ h3 d))(set! h4 (m32+ h4 e))(set! h5 (m32+ h5 f))
 		 (set! h6 (m32+ h6 g))(set! h7 (m32+ h7 h))))))
-	
+
 	;; hash all full 64 byte chunks
 	(do ((i chunks (fx1- i))
 	     (offset 0 (fx+ offset 64)))
 	    ((fxzero? i))
-	  (bytevector-copy! bv offset w64 0 64)  
-	  (expand-chunk! w64)	     
-	  (hash-and-update))                     
-	
-	;; do final partial chunk(s) 
+	  (bytevector-copy! bv offset w64 0 64)
+	  (expand-chunk! w64)
+	  (hash-and-update))
+
+	;; do final partial chunk(s)
 	(bytevector-copy! bv (fx* chunks 64) w64 0 remainder)
 	(bytevector-u8-set! w64 remainder #x80)  ;; 10000000 1-bit byte
 	(if (fx< remainder 56)                  ;; enough room in this block for 8 byte bv length
@@ -172,7 +172,7 @@
 	      (chunk-data-length! w64 len)
 	      (expand-chunk! w64)
 	      (hash-and-update)))))
-    ;; return the final hash value 
+    ;; return the final hash value
     (let ((hc (make-bytevector 32 0)))
       (word-set! hc 0 h0)
       (word-set! hc 1 h1)
@@ -190,13 +190,13 @@
 ;; data: (or string? bytevector?)
 (: sha256 ((U Bytes String) -> Bytes))
 (define (sha256 data)
-  (cond 
+  (cond
    ((bytevector? data) (sha256-bytes data))
    ((string? data) (sha256-bytes (str->bv data)))))
 
 ;;  (string->bytevector s (make-transcoder (utf-8-codec))))
 
-;; ;; f7846f55cf23e14eebeab5b4e1550cad5b509e3348fbc4efa3a1413d393cb650 
+;; ;; f7846f55cf23e14eebeab5b4e1550cad5b509e3348fbc4efa3a1413d393cb650
 ;; (sha256 (mk-msg "message digest"))
 
 ;; ;; short 1 block no room for length

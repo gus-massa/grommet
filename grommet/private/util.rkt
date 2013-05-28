@@ -1,6 +1,6 @@
 #lang typed/racket/base
 
-(provide fx1+ 
+(provide fx1+
 	 fx1-
 	 fxzero?
 	 fxdiv-and-mod
@@ -9,11 +9,11 @@
 
 (require racket/fixnum)
 
-(require 
- (only-in "../../r6rslib/bytevectors.rkt"
-          bytevector-u8-ref
-          bytevector-length
-          string->utf8))
+(require
+ (only-in grip/r6rslib/bytevectors
+	  bytevector-u8-ref
+	  bytevector-length
+	  string->utf8))
 
 (define-syntax fx1+
   (syntax-rules ()
@@ -39,18 +39,18 @@
 
 (: mk-msg (String -> Bytes))
 (define (mk-msg s)
-    (string->utf8 s))
+  (string->utf8 s))
 
 ;; Bytevector to hex string
 ;; Only the first 8 32-bit words
 (: hexstr (Bytes -> String))
 (define (hexstr bv)
   (let ((hex (lambda: ((i : Integer))
-	     (let ((s (number->string (bytevector-u8-ref bv i) 16)))
-	       (if (fx= (string-length s) 1)
-		  (string-append "0" s)
-		  s))))
-      (len (bytevector-length bv)))
+		      (let ((s (number->string (bytevector-u8-ref bv i) 16)))
+			(if (fx= (string-length s) 1)
+			    (string-append "0" s)
+			    s))))
+	(len (bytevector-length bv)))
     (do: : String ((i : Integer 0 (fx1+ i))
 		   (s : String "" (string-append s (hex i))))
 	 ((fx= i len) s))))
