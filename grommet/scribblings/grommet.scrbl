@@ -6,8 +6,6 @@
 
 @title[#:tag "top"]{@bold{Crypto} Typed Racket crypto procedures}
 
-@declare-exporting["../../crypto.rkt"]
-
 @table-of-contents[]
 
 by Ray Racine (@tt{ray dot racine at gmail dot com})
@@ -15,6 +13,8 @@ by Ray Racine (@tt{ray dot racine at gmail dot com})
 Provides a pure Typed Racket implementation of SHA-256 and typed wrappers for existing functions sucha as Base64 encoding, SHA-1 and MD-5.
 
 @section{Base64}
+
+@defmodule[grommet/crypto/base64]{
 
 Base64 encoding and decoding routines.
 
@@ -24,6 +24,8 @@ Base64 encode a byte array to a string.
 
 @defproc[(base64-decode [str String]) Bytes]{
 Base64 decode the given string to an array of bytes.			
+}
+
 }
 
 @section{Hash}
